@@ -14,7 +14,7 @@ int main(int argc, char **argv)
 
 void filei(char *filename)
 {
-	int fd = open(filename, O_RDWR | O_CREAT, 0644);
+	int fd = open(filename, O_RDWR, 0644);
 	char flag[1024] = {};
 	scanf("%s",flag);
 	write(fd, flag, 25);
