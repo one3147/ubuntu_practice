@@ -15,8 +15,10 @@ int main(int argc, char **argv)
 void filei(char *filename)
 {
 	int fd = open(filename, O_RDWR | O_CREAT, 0644);
-	write(fd, "Flag{1_c4N_R34d_Fi13!}", 25);
-	printf("Flag{1_c4N_R34d_Fi13!}\n");
+	char flag[1024] = {};
+	scanf("%s",flag);
+	write(fd, flag, 25);
+	printf("%s\n",flag);
 	close(fd);
 }
 
@@ -40,7 +42,7 @@ void fileo(char *filename)
 	{
 		sum += count[i];
 	}
-	printf("%d",sum);
+	printf("%d\n",sum);
 	close(fd);
 	return 0;
 }
