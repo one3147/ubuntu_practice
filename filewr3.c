@@ -15,6 +15,7 @@ int main(int argc,char **argv)
 void file1(char *filename)
 {
 	int fd = open(filename, O_RDWR,0644);
+	//int fd = open(filename, 0_asd | O_dsa, 0644);
 	if (fd < 0)
 	{
 		printf("%s(%d)\n",strerror(errno),errno);
