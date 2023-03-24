@@ -8,8 +8,10 @@ int main() {
     DIR *dirp;
     struct dirent *dentry;
     
-    if((dirp == opendir(".")) == NULL) exit(1);
-
+    if((dirp = opendir(".")) == NULL) 
+	{
+		exit(1);
+	}
     while (dentry = readdir(dirp)) {
         if(dentry -> d_ino != 0)
             printf("%s\n", dentry->d_name);
