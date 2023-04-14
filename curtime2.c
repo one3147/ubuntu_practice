@@ -1,32 +1,38 @@
+#include <unistd.h>
+#include <time.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <time.h>
-#include <signal.h>
+
 int main()
 {
-    pid_t pid;
-    int fd;
-    char buffer[1024];
-    time_t cur_time;
-    struct sigaction act;
+	time_t result;
+	pid_t pid;
 
-    fd = open("curtime.txt", O_CREAT | O_WRONLY | O_TRUNC, 0644);
+	int filedes;
+	char buffer[32];
 
-    for (int i = 0; i < 60; i++) {
-        sleep(10);
-        pid = fork();
+	pid = fork();
+
+	if(pid > 0)
+	{
+		sleep(1);
+		exit(1);
+	}
+	else if(pid == 0)
+	{
 		setsid();
-        if (pid == 0) {
-            time_t result = time(NULL);
-            strcpy(buffer,asctime(localtime(&result)));
-			write(fd,buffer,strlen(buffer));
-            exit(0);
-        }
-    }
+		filedes = open("./curtime.txt", O_RDWR | O_CREAT, 0644);
+		for(;;)
+		{
+			result = time(NULL);
+			strcpy(buffer, asctime(localtime(&result)));
+			printf("%s", buffer);
+			write(filedes, buffer, strlen(buffer));
+			sleep(10);
+		}
+	}
 
-    return 0;
 }
