@@ -2,5 +2,5 @@
 int main() 
 {
 	setenv("MYDATA", "5", 0);
-	execl("./ex08-13", "ex08-13", (char *) 0);
+	execl("./20230421_3_2", "20230421_3_2", (char *) 0);
 }
