@@ -1,4 +1,4 @@
-include <stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -67,10 +67,11 @@ void restartBlock(SoftwareBlock* block, const char* reason) {
         return;
     }
 
-    fprintf(file, "Block Name: %s\n", block->name);
-    fprintf(file, "Restart Count: %d\n", block->restartCount);
-    fprintf(file, "Start Time: %s", ctime(&block->startTime));
-    fprintf(file, "Reason: %s\n\n", block->reason);
+    // Remove newline character from ctime result
+    char* timeStr = ctime(&block->startTime);
+    timeStr[strlen(timeStr) - 1] = '\0';
+
+    fprintf(file, "%-15s%-15d%-25s%s\n", block->name, block->restartCount, timeStr, block->reason);
 
     fclose(file);
 }
@@ -84,26 +85,14 @@ void childSignalHandler(int signal) {
         SoftwareBlock* blockToRestart = &blocks[randomIndex];
 
         char restartReason[50];
-        switch (signal) {
-            case 1:
-                snprintf(restartReason, sizeof(restartReason), "Signal(1)");
-                kill(getpid(), SIGHUP);
-                break;
-            case 2:
-                snprintf(restartReason, sizeof(restartReason), "Signal(2)");
-                kill(getpid(), SIGINT);
-                break;
-            case 3:
-                snprintf(restartReason, sizeof(restartReason), "Signal(3)");
-                kill(getpid(), SIGQUIT);
-                break;
-            case 4:
-                snprintf(restartReason, sizeof(restartReason), "Signal(4)");
-                kill(getpid(), SIGTERM);
-                break;
-            default:
-                snprintf(restartReason, sizeof(restartReason), "Signal(%d, Killed)", signal);
-                break;
+        if (signal == SIGCHLD) {
+            snprintf(restartReason, sizeof(restartReason), "Signal(SIGCHLD)");
+        } else if (signal == SIGTERM) {
+            snprintf(restartReason, sizeof(restartReason), "Signal(SIGTERM)");
+        } else if (signal == SIGINT) {
+            snprintf(restartReason, sizeof(restartReason), "Signal(SIGINT)");
+        } else {
+            snprintf(restartReason, sizeof(restartReason), "Signal(%d, Killed)", signal);
         }
 
         restartBlock(blockToRestart, restartReason);
@@ -117,24 +106,40 @@ void spawnChildProcess() {
         exit(1);
     } else if (pid == 0) {
         sleep(3);
-        signal(SIGHUP, SIG_DFL);
-        signal(SIGINT, SIG_DFL);
-        signal(SIGQUIT, SIG_DFL);
-        signal(SIGTERM, SIG_DFL);
+        // Terminate the child process
+        kill(getpid(), SIGKILL);
         exit(0);
     } else {
         signal(SIGCHLD, childSignalHandler);
+        // Handle SIGTERM and SIGINT signals
+        signal(SIGTERM, childSignalHandler);
+        signal(SIGINT, childSignalHandler);
     }
 }
 
 void printBlockStatus() {
+    FILE* file = fopen(LOG_FILE, "a");
+    if (file == NULL) {
+        printf("Error opening log file.\n");
+        return;
+    }
+
+    fprintf(file, "%-15s%-15s%-25s%s\n", "S/W Block Name", "Restart Count", "Start Time", "Reason");
+    for (int i = 0; i < blockCount; i++) {
+        SoftwareBlock* block = &blocks[i];
+        char* timeStr = ctime(&block->startTime);
+        timeStr[strlen(timeStr) - 1] = '\0';  // Remove newline character
+        fprintf(file, "%-15s%-15d%-25s%s\n", block->name, block->restartCount, timeStr, block->reason);
+    }
+
+    fclose(file);
+
     printf("%-15s%-15s%-25s%s\n", "S/W Block Name", "Restart Count", "Start Time", "Reason");
     for (int i = 0; i < blockCount; i++) {
         SoftwareBlock* block = &blocks[i];
-        struct tm* timeinfo = localtime(&block->startTime);
-        char startTimeStr[50];
-        strftime(startTimeStr, sizeof(startTimeStr), "%c", timeinfo);
-        printf("%-15s%-15d%-25s%s\n", block->name, block->restartCount, startTimeStr, block->reason);
+        char* timeStr = ctime(&block->startTime);
+        timeStr[strlen(timeStr) - 1] = '\0';  // Remove newline character
+        printf("%-15s%-15d%-25s%s\n", block->name, block->restartCount, timeStr, block->reason);
     }
 }
 
@@ -149,8 +154,7 @@ int main() {
 
     while (1) {
         sleep(RESTART_INTERVAL);
-        int signalNumber = rand() % 4 + 1;  
-        spawnChildProcess(signalNumber);
+        spawnChildProcess();
         printBlockStatus();
     }
 
