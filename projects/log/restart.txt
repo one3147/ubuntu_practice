@@ -1,0 +1,6 @@
+S/W Block Name Restart Count  Start Time               Reason
+SwBlock1       5              Fri Jun 30 02:34:41 2023 Init
+SwBlock2       1              Fri Jun 30 02:34:47 2023 Signal(17, SIGCHLD)
+SwBlock3       0              Fri Jun 30 02:34:41 2023 Signal(9, SIGKILL)
+SwBlock4       2              Fri Jun 30 02:34:41 2023 Init
+SwBlock5       3              Fri Jun 30 02:34:41 2023 Signal(2, SIGINT)
